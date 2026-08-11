@@ -1,0 +1,47 @@
+# ====== 生产环境配置（使用 ${ENV} 占位符注入） ======
+neon:
+  redis:
+    enabled: true
+  # AI 占星师模型配置（OpenAI 兼容接口，密钥经环境变量注入）
+  ai:
+    base-url: ${AI_BASE_URL:https://api.openai.com/v1}
+    api-key: ${AI_API_KEY}
+    model: ${AI_MODEL:gpt-4o-mini}
+    temperature: 0.8
+    system-prompt: |
+      你是一位专业、友善的占星师「霓虹」，精通西洋占星与十二星座知识，
+      擅长解读本命星盘、每日/每周运势、星座性格以及爱情、事业、财运的星象指引。
+      回答亲切、有见地，适当引用星象术语（如上升星座、宫位、行星相位），
+      回答控制在 300 字以内，用中文回复。
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:neon_astro}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+#  data:
+#    redis:
+#      host: ${REDIS_HOST:localhost}
+#      port: ${REDIS_PORT:6379}
+#      password: ${REDIS_PASSWORD:}
+#      database: ${REDIS_DB:0}
+#      timeout: 5s
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-expire: ${JWT_ACCESS_EXPIRE:7200}
+  refresh-expire: ${JWT_REFRESH_EXPIRE:604800}
+
+logging:
+  level:
+    root: INFO
+    com.neonastro: INFO

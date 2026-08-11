@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 系统用户 Mapper，对应 com.neonastro.modules.auth.mapper.UserMapper -->
+<mapper namespace="com.neonastro.modules.auth.mapper.UserMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="userResultMap" type="com.neonastro.modules.auth.entity.User">
+        <id     column="id"          property="id"/>
+        <result column="username"    property="username"/>
+        <result column="email"        property="email"/>
+        <result column="password"     property="password"/>
+        <result column="nickname"    property="nickname"/>
+        <result column="avatar"      property="avatar"/>
+        <result column="status"      property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted"     property="deleted"/>
+    </resultMap>
+
+    <!-- 根据用户名查询用户（排除已删除） -->
+    <select id="selectByUsername" resultMap="userResultMap">
+        SELECT id, username, email, password, nickname, avatar, status,
+               create_time, update_time, deleted
+        FROM sys_user
+        WHERE username = #{username}
+          AND deleted = 0
+    </select>
+
+</mapper>

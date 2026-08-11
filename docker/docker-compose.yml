@@ -1,0 +1,82 @@
+version: "3.9"
+
+# Neon Astro Stack 全栈编排
+# 使用：docker compose up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: neon-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-neon_astro}
+      POSTGRES_USER: ${POSTGRES_USER:-neon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neon123}
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-neon} -d ${POSTGRES_DB:-neon_astro}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: neon-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-neon123}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-neon123}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: neon-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-neon_astro}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-neon}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-neon123}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-neon123}
+      JWT_SECRET: ${JWT_SECRET:-bmVvbi1hc3Ryby1zdGFjay1qd3Qtc2VjcmV0LWtleS1mb3ItcHJvZHVjdGlvbi0yMDI2}
+      # AI 占星师模型（OpenAI 兼容接口）
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: neon-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:

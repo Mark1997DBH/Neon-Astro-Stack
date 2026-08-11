@@ -1,0 +1,60 @@
+# ====== 开发环境配置 ======
+# neon.redis.enabled=false: 使用内存存储，无需启动 Redis 即可运行（默认）
+# neon.redis.enabled=true:  使用 Redis，需先执行 docker compose -f docker/docker-compose.dev.yml up -d
+neon:
+  redis:
+    enabled: false
+  # AI 占星师模型配置（OpenAI 兼容接口）
+  # 真实 API Key 通过环境变量 AI_API_KEY 注入，勿在文件中填写真实密钥（防仓库泄露）
+  ai:
+    base-url: ${AI_BASE_URL:https://api.deepseek.com}
+    api-key: ${AI_API_KEY:sk-your-api-key-here}
+    model: ${AI_MODEL:deepseek-chat}
+    temperature: 0.8
+    system-prompt: |
+      你是一位专业、友善的占星师「霓虹」，精通西洋占星与十二星座知识，
+      擅长解读本命星盘、每日/每周运势、星座性格以及爱情、事业、财运的星象指引。
+      回答亲切、有见地，适当引用星象术语（如上升星座、宫位、行星相位），
+      回答控制在 300 字以内，用中文回复。
+
+spring:
+  # 排除 Spring Boot Redis 自动配置（enabled=false 时必须保留，避免创建 Redis 连接工厂）
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  # PostgreSQL 数据源（以下为本地开发库凭据，生产环境通过环境变量注入）
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/neon_astro
+    username: postgres
+    password: dbh1997
+
+  # Redis 连接配置（enabled=true 时生效）
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 5s
+
+  # Flyway 迁移
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+# JWT 配置
+jwt:
+  secret: neon-astro-dev-secret-key-please-change-in-production-32bytes
+  # 访问令牌有效期（秒）2 小时
+  access-expire: 7200
+  # 刷新令牌有效期（秒）7 天
+  refresh-expire: 604800
+
+logging:
+  level:
+    root: INFO
+    com.neonastro: DEBUG
+    org.springframework.security: DEBUG

@@ -1,0 +1,36 @@
+# Maven 构建产物
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+*.iml
+.idea/
+*.ipr
+*.iws
+out/
+
+### Eclipse / STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### VS Code ###
+.vscode/
+
+### 日志 ###
+logs/
+*.log
+
+### 系统文件 ###
+.DS_Store
+Thumbs.db
+
+### 环境与密钥 ###
+*.env
+*.local
