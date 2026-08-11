@@ -55,6 +55,8 @@ public class AuthServiceImpl implements AuthService {
         user.setNickname(req.getNickname() != null ? req.getNickname() : req.getUsername());
         user.setStatus(UserStatusEnum.ACTIVE.getCode());
         userMapper.insert(user);
+        // 绑定默认角色（sys_user_role 关联表）
+        userMapper.insertUserRole(user.getId(), "ROLE_USER");
         log.info("用户注册成功：{}", user.getUsername());
         return toUserVO(user);
     }

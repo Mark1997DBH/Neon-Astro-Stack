@@ -27,4 +27,24 @@
           AND deleted = 0
     </select>
 
+    <!-- 根据用户 ID 查询角色编码列表（sys_user_role 关联 sys_role） -->
+    <select id="selectRolesByUserId" resultType="java.lang.String">
+        SELECT r.role_code
+        FROM sys_user_role ur
+                 JOIN sys_role r ON r.id = ur.role_id AND r.deleted = 0
+        WHERE ur.user_id = #{userId}
+    </select>
+
+    <!-- 为用户绑定指定角色（按角色编码关联 sys_role，幂等插入） -->
+    <insert id="insertUserRole">
+        INSERT INTO sys_user_role (user_id, role_id, create_time)
+        SELECT #{userId}, id, CURRENT_TIMESTAMP
+        FROM sys_role
+        WHERE role_code = #{roleCode}
+          AND deleted = 0
+          AND NOT EXISTS (
+              SELECT 1 FROM sys_user_role WHERE user_id = #{userId} AND role_id = sys_role.id
+          )
+    </insert>
+
 </mapper>

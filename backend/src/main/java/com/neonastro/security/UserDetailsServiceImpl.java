@@ -10,7 +10,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 用户详情服务实现，供 Spring Security 认证使用
@@ -22,6 +24,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
+    /** 兜底角色：历史数据无角色绑定记录时授予 */
+    private static final String DEFAULT_ROLE = "ROLE_USER";
+
     private final UserMapper userMapper;
 
     @Override
@@ -30,9 +35,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("用户不存在：" + username);
         }
-        // 默认授予普通用户角色，后续可扩展为根据角色表加载
-        Set<SimpleGrantedAuthority> authorities =
-                Set.of(new SimpleGrantedAuthority("ROLE_USER"));
+        // 从 sys_user_role 关联表动态加载角色，避免硬编码权限
+        List<String> roles = userMapper.selectRolesByUserId(user.getId());
+        Set<SimpleGrantedAuthority> authorities;
+        if (roles == null || roles.isEmpty()) {
+            log.warn("用户 {} 无角色绑定记录，授予兜底角色 {}", user.getUsername(), DEFAULT_ROLE);
+            authorities = Set.of(new SimpleGrantedAuthority(DEFAULT_ROLE));
+        } else {
+            authorities = roles.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toSet());
+        }
         return new LoginUser(user.getId(), user.getUsername(), user.getPassword(),
                 user.getStatus(), authorities);
     }
