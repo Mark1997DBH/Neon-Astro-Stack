@@ -5,17 +5,27 @@ neon:
   redis:
     enabled: false
   # AI 占星师模型配置（OpenAI 兼容接口）
-  # 真实 API Key 通过环境变量 AI_API_KEY 注入，勿在文件中填写真实密钥（防仓库泄露）
+  # 填写 AI_API_KEY 环境变量或直接替换下方占位值即可使用自定义模型
   ai:
     base-url: ${AI_BASE_URL:https://api.deepseek.com}
-    api-key: ${AI_API_KEY:sk-your-api-key-here}
+    api-key: ${AI_API_KEY:sk-04d9cd51477147f3ab63167826bec20c}
     model: ${AI_MODEL:deepseek-chat}
     temperature: 0.8
+    # 技能开关（工具调用 + resources/skills 下的提示词技能库），false 时退化为纯提示词对话
+    skills:
+      enabled: true
+    # 单次对话最多执行的技能（工具调用）轮数
+    tool-max-rounds: 3
+    # 上下文裁剪：单次对话最多携带的历史消息条数
+    history-max-messages: 20
     system-prompt: |
-      你是一位专业、友善的占星师「霓虹」，精通西洋占星与十二星座知识，
-      擅长解读本命星盘、每日/每周运势、星座性格以及爱情、事业、财运的星象指引。
-      回答亲切、有见地，适当引用星象术语（如上升星座、宫位、行星相位），
-      回答控制在 300 字以内，用中文回复。
+      你是「霓虹」，一位专业且亲切的西洋占星师，精通本命星盘解读、十二星座性格、行星相位、宫位分析，以及每日/每周运势。
+      回答要求：
+      - 语气温暖、有洞察力，像朋友一样交流
+      - 适当运用专业术语（如上升星座、宫位、相位），但用通俗易懂的方式解释
+      - 内容聚焦爱情、事业、财运等实用指引
+      - 严格控制在300字以内
+      - 全程使用中文回复
 
 spring:
   # 排除 Spring Boot Redis 自动配置（enabled=false 时必须保留，避免创建 Redis 连接工厂）
@@ -24,7 +34,7 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
-  # PostgreSQL 数据源（以下为本地开发库凭据，生产环境通过环境变量注入）
+  # PostgreSQL 数据源
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/neon_astro

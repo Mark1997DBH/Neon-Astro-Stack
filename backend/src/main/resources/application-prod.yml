@@ -8,6 +8,13 @@ neon:
     api-key: ${AI_API_KEY}
     model: ${AI_MODEL:gpt-4o-mini}
     temperature: 0.8
+    # 技能开关（工具调用 + resources/skills 下的提示词技能库），false 时退化为纯提示词对话
+    skills:
+      enabled: ${AI_SKILLS_ENABLED:true}
+    # 单次对话最多执行的技能（工具调用）轮数
+    tool-max-rounds: ${AI_TOOL_MAX_ROUNDS:3}
+    # 上下文裁剪：单次对话最多携带的历史消息条数
+    history-max-messages: ${AI_HISTORY_MAX_MESSAGES:20}
     system-prompt: |
       你是一位专业、友善的占星师「霓虹」，精通西洋占星与十二星座知识，
       擅长解读本命星盘、每日/每周运势、星座性格以及爱情、事业、财运的星象指引。
